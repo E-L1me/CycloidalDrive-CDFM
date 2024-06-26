@@ -1,0 +1,36 @@
+e = .8 #eccentricity distance
+rp = 1.5 #roller pin radius
+Rp = 30 #roller pin distribution radius
+zc = 29 #number of cycloidal teeth
+zp = zc + 1 #number of roller pins
+rw = 3.5 #output pin radius
+Rw = 21 #output pin distribution radius
+rwh = rw + e #output pin hole radius
+Rwh = Rw #output pin hole distribution radius
+zw = 8 #number of output pins
+# omegain = #input drive speed
+# omegaout = #output drive speed
+
+"""
+if configuration is "pin gear fixed, output disk outputs":
+    Iew = omegain/omegaout = -zp/(zp - zc) = -zp #theoretical transmission ratio
+
+if configuration is "out put disk is fixed, pin gear outputs":
+    Iep = omegaout/omegain = zp/(zp - zc) = zp #theoretical transmission ratio
+"""
+
+re = 8 #radius of input shaft
+rec = 15 #baring radius of eccentric shaft in contact with cycloidal gear
+
+
+de = 0 #eccentric shaft deviation
+
+drwh = 0 #deviation in radius of pin-hole
+dRwh = 0 #deviation in radius of distribution of pin-hole
+
+drp = 0 #deviation in radius of roller pin
+dRp = 0 #deviation in radius of distribution of roller pin
+
+
+#I'm going to use this to do the actions/plotting/active math/run code..... the other file will have my classes and stuff
+#if people are reading this is such organization good? or do you reccomend I orgamize my files another way (I have no clue what's good organizing practice)?
