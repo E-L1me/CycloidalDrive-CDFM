@@ -44,6 +44,15 @@ def Pc2w(x):
 def Rp2w(x):
     return np.array([[np.cos(x), -np.sin(x)], [np.sin(x), np.cos(x)]])
 
+def get_axes(r, steps=100):
+    xs = []
+    for t in np.linspace(-r, r,steps):
+        xs.append([t, 0])
+    ys = []
+    for t in np.linspace(-r, r,steps):
+        ys.append([0, t])
+    return xs, ys
+
 class Cycloid:
     def __init__(self):
         self.points = np.array([]) #points of the graph
@@ -51,8 +60,11 @@ class Cycloid:
         self.tlist = np.array([]) #independent variable for the parametric equations
         self.roc = np.array([]) #radius of curvature
         self.position = np.array([]) #position of the cycloid
+        xs, ys = get_axes(Rp) #axes of the cycloid
+        self.xaxis = np.array(xs) #x axis of the cycloid
+        self.yaxis = np.array(ys) #y axis
 
-    def set_tlist(self, steps = 5000):
+    def set_tlist(self, steps=5000):
         self.tlist = np.linspace(0,2*np.pi,steps)
         return self.tlist
 
@@ -86,17 +98,31 @@ class Cycloid:
             vector = np.array([[i[0]], [i[1]]])
             new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
             position.append([new[0,0], new[1,0], i[2]])
-        print(position)
         self.position = np.array(position)
         return self.position
+        """  
+        xs = []
+        ys = []
+        for i in self.xaxis:
+            vector = np.array([[i[0]], [i[1]]])
+            new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+            xs.append([new[0,0], new[1,0], i[2]])
+        for i in self.yaxis:
+            vector = np.array([[i[0]], [i[1]]])
+            new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+            ys.append([new[0,0], new[1,0], i[2]])
+        self.xaxis = np.array(xs)
+        self.yaxis = np.array(ys)
+        """
 
 
     def translate_normdir(self, degrees):
-        for i in self.normdir:
+        position = []
+        for i in self.points:
             vector = np.array([[i[0]], [i[1]]])
             new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
-            i[0] = new[0]
-            i[1] = new[1]
+            position.append([new[0,0], new[1,0], i[2]])
+        self.normdir = np.array(position)
         return self.normdir
 
 class OutputPinHole:
@@ -105,6 +131,8 @@ class OutputPinHole:
         self.points = np.array([]) #points of the graph
         self.normdir = np.array([]) #normal direction for each point
         self.tlist = np.array([]) #independent variable for the parametric equations
+        self.position = np.array([]) #position of the output pin holes
+        self.pos_normdir = np.array([]) #norm dir for position of the output pin holes
 
     def set_tlist(self, steps = 5000):
         self.tlist = np.linspace(0,2*np.pi,steps)
@@ -133,23 +161,29 @@ class OutputPinHole:
             np.append(self.normdir, pin)
         return self.normdir
 
-    def translate_points(self):
-        for pin in self.points:
-            for i in pin:
+    def translate_points(self, degrees):
+        position = []
+        for z in self.points:
+            pin = []
+            for i in z:
                 vector = np.array([[i[0]], [i[1]]])
-                new = np.matmul(Rc2w(i[2]), vector) + Pc2w(i[2])
-                i[0] = new[0]
-                i[1] = new[1]
-        return self.points
+                new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+                pin.append([new[0,0], new[1,0], i[2]])
+            position.append(pin)
+        self.position = np.array(position)
+        return self.position
 
-    def translate_normdir(self):
-        for pin in self.normdir:
-            for i in pin:
+    def translate_normdir(self, degrees):
+        position = []
+        for z in self.points:
+            pin = []
+            for i in z:
                 vector = np.array([[i[0]], [i[1]]])
-                new = np.matmul(Rc2w(i[2]), vector) + Pc2w(i[2])
-                i[0] = new[0]
-                i[1] = new[1]
-        return self.normdir
+                new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+                pin.append([new[0,0], new[1,0], i[2]])
+            position.append(pin)
+        self.pos_normdir = np.array(position)
+        return self.pos_normdir
 
 
 class RollerPin:
@@ -158,6 +192,8 @@ class RollerPin:
         self.points = np.array([]) #points of the graph
         self.normdir = np.array([]) #normal direction for each point
         self.tlist = np.array([]) #independent variable for the parametric equations
+        self.position = np.array([]) #position of the roller pins
+        self.pos_normdir = np.array([]) #norm dir for position of the roller pins
 
     def set_tlist(self, steps = 5000):
         self.tlist = np.linspace(0,2*np.pi,steps)
@@ -186,23 +222,29 @@ class RollerPin:
             np.append(self.normdir, roller)
         return self.normdir
 
-    def translate_points(self):
-        for roller in self.points:
-            for i in roller:
+    def translate_points(self, degrees):
+        position = []
+        for z in self.points:
+            pin = []
+            for i in z:
                 vector = np.array([[i[0]], [i[1]]])
-                new = np.matmul(Rp2w(i[2]), vector)
-                i[0] = new[0]
-                i[1] = new[1]
-        return self.points
+                new = np.matmul(Rp2w(degrees), vector)
+                pin.append([new[0,0], new[1,0], i[2]])
+            position.append(pin)
+        self.position = np.array(position)
+        return self.position
 
-    def translate_normdir(self):
-        for roller in self.normdir:
-            for i in roller:
+    def translate_normdir(self, degrees):
+        position = []
+        for z in self.normdir:
+            pin = []
+            for i in z:
                 vector = np.array([[i[0]], [i[1]]])
-                new = np.matmul(Rp2w(i[2]), vector)
-                i[0] = new[0]
-                i[1] = new[1]
-        return self.normdir
+                new = np.matmul(Rp2w(degrees), vector)
+                pin.append([new[0,0], new[1,0], i[2]])
+            position.append(pin)
+        self.pos_normdir = np.array(position)
+        return self.pos_normdir
 
 class OutputPin:
     def __init__(self):
