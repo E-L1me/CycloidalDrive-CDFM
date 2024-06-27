@@ -34,12 +34,23 @@ dRwh = 0 #deviation in radius of distribution of pin-hole
 drp = 0 #deviation in radius of roller pin
 dRp = 0 #deviation in radius of distribution of roller pin
 
+#translation matricies
+def Rc2w(x):
+    return np.array([[np.cos(x), -np.sin(x)], [np.sin(x), np.cos(x)]])
+
+def Pc2w(x):
+    return np.array([[-(e + de) * np.sin(x)],[(e + de)*np.cos(x)]])
+
+def Rp2w(x):
+    return np.array([[np.cos(x), -np.sin(x)], [np.sin(x), np.cos(x)]])
+
 class Cycloid:
     def __init__(self):
         self.points = np.array([]) #points of the graph
         self.normdir = np.array([]) #normal direction for each point
         self.tlist = np.array([]) #independent variable for the parametric equations
         self.roc = np.array([]) #radius of curvature
+        self.position = np.array([]) #position of the cycloid
 
     def set_tlist(self, steps = 5000):
         self.tlist = np.linspace(0,2*np.pi,steps)
@@ -59,7 +70,7 @@ class Cycloid:
         for i in self.points:
             x = (i[0,0] - zc * e * np.sin(zp*i[1]))/(math.sqrt((i[0,0] - zc * e * np.sin(zp * i[1]))**2 + (i[0,0] - zc * e * np.cos(zp * i[1]))**2))
             y = (i[0,1] - zc * e * np.cos(zp*i[1]))/(math.sqrt((i[0,1] - zc * e * np.sin(zp * i[1]))**2 + (i[0,1] - zc * e * np.cos(zp * i[1]))**2))
-            np.append(self.normdir, (x,y,i[2]))
+            np.append(self.normdir, (x,y, i[2]))
         return self.normdir
 
     def get_roc(self):
@@ -69,8 +80,24 @@ class Cycloid:
             np.append(self.roc, (pc, t))
         return self.roc
 
-    def translate_points(self):
-        pass
+    def translate_points(self, degrees):
+        position = []
+        for i in self.points:
+            vector = np.array([[i[0]], [i[1]]])
+            new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+            position.append([new[0,0], new[1,0], i[2]])
+        print(position)
+        self.position = np.array(position)
+        return self.position
+
+
+    def translate_normdir(self, degrees):
+        for i in self.normdir:
+            vector = np.array([[i[0]], [i[1]]])
+            new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+            i[0] = new[0]
+            i[1] = new[1]
+        return self.normdir
 
 class OutputPinHole:
     def __init__(self):
@@ -107,7 +134,22 @@ class OutputPinHole:
         return self.normdir
 
     def translate_points(self):
-        pass
+        for pin in self.points:
+            for i in pin:
+                vector = np.array([[i[0]], [i[1]]])
+                new = np.matmul(Rc2w(i[2]), vector) + Pc2w(i[2])
+                i[0] = new[0]
+                i[1] = new[1]
+        return self.points
+
+    def translate_normdir(self):
+        for pin in self.normdir:
+            for i in pin:
+                vector = np.array([[i[0]], [i[1]]])
+                new = np.matmul(Rc2w(i[2]), vector) + Pc2w(i[2])
+                i[0] = new[0]
+                i[1] = new[1]
+        return self.normdir
 
 
 class RollerPin:
@@ -145,8 +187,22 @@ class RollerPin:
         return self.normdir
 
     def translate_points(self):
-        pass
+        for roller in self.points:
+            for i in roller:
+                vector = np.array([[i[0]], [i[1]]])
+                new = np.matmul(Rp2w(i[2]), vector)
+                i[0] = new[0]
+                i[1] = new[1]
+        return self.points
 
+    def translate_normdir(self):
+        for roller in self.normdir:
+            for i in roller:
+                vector = np.array([[i[0]], [i[1]]])
+                new = np.matmul(Rp2w(i[2]), vector)
+                i[0] = new[0]
+                i[1] = new[1]
+        return self.normdir
 
 class OutputPin:
     def __init__(self):
