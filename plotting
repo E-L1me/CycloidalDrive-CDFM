@@ -1,3 +1,8 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+
+
 e = .8 #eccentricity distance
 rp = 1.5 #roller pin radius
 Rp = 30 #roller pin distribution radius
@@ -34,3 +39,61 @@ dRp = 0 #deviation in radius of distribution of roller pin
 
 #I'm going to use this to do the actions/plotting/active math/run code..... the other file will have my classes and stuff
 #if people are reading this is such organization good? or do you reccomend I orgamize my files another way (I have no clue what's good organizing practice)?
+"""
+
+w = Rp
+N = zp
+E = e
+r = rp
+def x(t):
+    return w*np.cos(t) + r * np.cos(t+np.arctan((np.sin(1-N))/((w)/(E*N)-np.cos(1-N))))-E*np.cos(N*t)
+
+def y(t):
+    return -w*np.sin(t)+r*np.sin(t+np.arctan((np.sin(1-N))/((w)/(E*N)-np.cos(1-N))))+E*np.sin(N*t)
+
+t = np.linspace(0,2*np.pi,500)
+plt.plot(x(t),y(t))
+plt.autoscale(tight=True)
+plt.show()
+"""
+
+def cycloid_edge_x(givenlist):
+    xs = []
+    for t in givenlist:
+        K1 = (e * zp)/(Rp + dRp)
+        x = (Rp + dRp)* np.sin(t) - e * np.sin(zp*t) + ((K1*np.sin(zp*t)-np.sin(t))*(rp + drp))/(math.sqrt(1+K1**2 - 2*K1*np.cos(zc*t)))
+        xs.append(x)
+    return xs
+
+def cycloid_edge_y(givenlist):
+    ys = []
+    for t in givenlist:
+        K1 = (e * zp)/(Rp + dRp)
+        y = (Rp + dRp)* np.cos(t) - e * np.cos(zp*t) + ((K1*np.cos(zp*t)-np.cos(t))*(rp + drp))/(math.sqrt(1+K1**2 - 2*K1*np.cos(zc*t)))
+        ys.append(y)
+    return ys
+
+
+def cycloid_outputpinhole_x(givenlist, i):
+    xs = []
+    for t in givenlist:
+        x = -(rwh + drwh) * np.sin(t) - (Rwh + dRwh) * np.sin(((2*i+1)*np.pi)/(zw))
+        xs.append(float(x))
+    return xs
+
+def cycloid_outputpinhole_y(givenlist, i):
+    ys = []
+    for t in givenlist:
+        y = (rwh + drwh) * np.cos(t) + (Rwh + dRwh) * np.cos(((2*i+1)*np.pi)/(zw))
+        ys.append(float(y))
+    return ys
+
+
+
+phi = np.linspace(0,2*np.pi,5000)
+plt.figure(figsize=(10,10))
+plt.plot(cycloid_edge_x(phi), cycloid_edge_y(phi))
+for i in range(zw):
+    plt.plot(cycloid_outputpinhole_x(phi, i), cycloid_outputpinhole_y(phi, i), color="Orange")
+
+plt.savefig("plot")
