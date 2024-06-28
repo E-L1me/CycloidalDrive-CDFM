@@ -360,12 +360,12 @@ def a(Fc, p_1, p_2, E_1, E_2, v_1, v_2, b, concavity): #half the contact deforma
         p_star = abs((p_1*p_2)/(p_1+p_2))
     return np.sqrt((4*Fc*p_star*(E_1*(1-v_1**2)+E_2(1-v_2**2)))/(np.pi*b*E_1*E_2))
 
-def delta_(Fc, p_1, p_2, E_1, E_2, v_1, v_2, b, concavity): #deformation
-    a = a_(Fc, p_1, p_2, E_1, E_2, v_1, v_2, b, concavity)
+def delta(Fc, p_1, p_2, E_1, E_2, v_1, v_2, b, concavity): #deformation
+    a = a(Fc, p_1, p_2, E_1, E_2, v_1, v_2, b, concavity)
     return (((1-v_1**2)/E_1)*(np.log((4*abs(p_1))/a)-1/2)+((1-v_2**2)/E_2)*(np.log((4*abs(p_2))/a)-1/2))*(2*Fc)/(np.pi*b)
 
-def sigma_(Fc, p_1, p_2, E_1, E_2, v_1, v_2, b, concavity): #contact stress
-    a = a_(Fc, p_1, p_2, E_1, E_2, v_1, v_2, b, concavity)
+def sigma(Fc, p_1, p_2, E_1, E_2, v_1, v_2, b, concavity): #contact stress
+    a = a(Fc, p_1, p_2, E_1, E_2, v_1, v_2, b, concavity)
     return 2*Fc/(np.pi*a*b)
 
 
