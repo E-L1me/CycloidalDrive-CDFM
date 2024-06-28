@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cfdmclasses
 
-angle = 50
+angle = 0
 
 #creating objects
 mycycloid = cfdmclasses.Cycloid()
