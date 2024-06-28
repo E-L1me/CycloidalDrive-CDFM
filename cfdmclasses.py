@@ -63,6 +63,8 @@ class Cycloid:
         xs, ys = get_axes(Rp) #axes of the cycloid
         self.xaxis = np.array(xs) #x axis of the cycloid
         self.yaxis = np.array(ys) #y axis
+        self.txaxis = self.xaxis #position of x axis
+        self.tyaxis = self.yaxis #position of y axis
 
     def set_tlist(self, steps=5000):
         self.tlist = np.linspace(0,2*np.pi,steps)
@@ -94,26 +96,24 @@ class Cycloid:
 
     def translate_points(self, degrees):
         position = []
+        xs = []
+        ys = []
         for i in self.points:
             vector = np.array([[i[0]], [i[1]]])
             new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
             position.append([new[0,0], new[1,0], i[2]])
         self.position = np.array(position)
-        return self.position
-        """  
-        xs = []
-        ys = []
         for i in self.xaxis:
             vector = np.array([[i[0]], [i[1]]])
             new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
-            xs.append([new[0,0], new[1,0], i[2]])
+            xs.append([new[0,0], new[1,0]])
+        self.txaxis = np.array(xs)
         for i in self.yaxis:
             vector = np.array([[i[0]], [i[1]]])
             new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
-            ys.append([new[0,0], new[1,0], i[2]])
-        self.xaxis = np.array(xs)
-        self.yaxis = np.array(ys)
-        """
+            ys.append([new[0,0], new[1,0]])
+        self.tyaxis = np.array(ys)
+        return self.position
 
 
     def translate_normdir(self, degrees):
@@ -133,6 +133,13 @@ class OutputPinHole:
         self.tlist = np.array([]) #independent variable for the parametric equations
         self.position = np.array([]) #position of the output pin holes
         self.pos_normdir = np.array([]) #norm dir for position of the output pin holes
+        xs, ys = get_axes(Rp) #axes of the cycloid
+        self.xaxis = np.array(xs) #x axis of the cycloid
+        self.yaxis = np.array(ys) #y axis
+        self.txaxis = self.xaxis #position of x axis
+        self.tyaxis = self.yaxis #position of y axis
+        self.centers = np.array([])
+        self.tcenters = np.array([])
 
     def set_tlist(self, steps = 5000):
         self.tlist = np.linspace(0,2*np.pi,steps)
@@ -140,14 +147,17 @@ class OutputPinHole:
 
     def get_points(self):
         points = []
+        centers = []
         for z in range(self.npins):
             pin = []
+            i = z + 1
+            centers.append([- (Rwh + dRwh) * np.sin(((2*i+1)*np.pi)/(zw)),+ (Rwh + dRwh) * np.cos(((2*i+1)*np.pi)/(zw))])
             for t in self.tlist:
-                i = z + 1
                 x =  -(rwh + drwh) * np.sin(t) - (Rwh + dRwh) * np.sin(((2*i+1)*np.pi)/(zw))
                 y = (rwh + drwh) * np.cos(t) + (Rwh + dRwh) * np.cos(((2*i+1)*np.pi)/(zw))
                 pin.append([x,y,t])
             points.append(pin)
+        self.centers = np.array(centers)
         self.points = np.array(points)
         return self.points
 
@@ -163,6 +173,8 @@ class OutputPinHole:
 
     def translate_points(self, degrees):
         position = []
+        xs = []
+        ys = []
         for z in self.points:
             pin = []
             for i in z:
@@ -171,6 +183,22 @@ class OutputPinHole:
                 pin.append([new[0,0], new[1,0], i[2]])
             position.append(pin)
         self.position = np.array(position)
+        for i in self.xaxis:
+            vector = np.array([[i[0]], [i[1]]])
+            new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+            xs.append([new[0,0], new[1,0]])
+        self.txaxis = np.array(xs)
+        for i in self.yaxis:
+            vector = np.array([[i[0]], [i[1]]])
+            new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+            ys.append([new[0,0], new[1,0]])
+        self.tyaxis = np.array(ys)
+        centers = []
+        for i in self.centers:
+            vector = np.array([[i[0]], [i[1]]])
+            new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+            centers.append([new[0,0], new[1,0]])
+        self.tcenters = np.array([centers])
         return self.position
 
     def translate_normdir(self, degrees):
@@ -194,6 +222,12 @@ class RollerPin:
         self.tlist = np.array([]) #independent variable for the parametric equations
         self.position = np.array([]) #position of the roller pins
         self.pos_normdir = np.array([]) #norm dir for position of the roller pins
+        xs, ys = get_axes(Rp) #axes of the cycloid
+        self.xaxis = np.array(xs) #x axis of the cycloid
+        self.yaxis = np.array(ys) #y axis
+        self.txaxis = self.xaxis #position of x axis
+        self.tyaxis = self.yaxis #position of y axis
+        self.centers = np.array([])
 
     def set_tlist(self, steps = 5000):
         self.tlist = np.linspace(0,2*np.pi,steps)
@@ -224,6 +258,8 @@ class RollerPin:
 
     def translate_points(self, degrees):
         position = []
+        xs = []
+        ys = []
         for z in self.points:
             pin = []
             for i in z:
@@ -232,6 +268,16 @@ class RollerPin:
                 pin.append([new[0,0], new[1,0], i[2]])
             position.append(pin)
         self.position = np.array(position)
+        for i in self.xaxis:
+            vector = np.array([[i[0]], [i[1]]])
+            new = np.matmul(Rp2w(degrees), vector)
+            xs.append([new[0,0], new[1,0]])
+        self.txaxis = np.array(xs)
+        for i in self.yaxis:
+            vector = np.array([[i[0]], [i[1]]])
+            new = np.matmul(Rp2w(degrees), vector)
+            ys.append([new[0,0], new[1,0]])
+        self.tyaxis = np.array(ys)
         return self.position
 
     def translate_normdir(self, degrees):
@@ -252,6 +298,12 @@ class OutputPin:
         self.points = np.array([]) #points of the graph
         self.normdir = np.array([]) #normal direction for each point
         self.tlist = np.array([]) #independent variable for the parametric equations
+        xs, ys = get_axes(Rp) #axes of the cycloid
+        self.xaxis = np.array(xs) #x axis of the cycloid
+        self.yaxis = np.array(ys) #y axis
+        self.txaxis = self.xaxis #position of x axis
+        self.tyaxis = self.yaxis #position of y axis
+        self.centers = np.array([])
 
     def set_tlist(self, steps = 5000):
         self.tlist = np.linspace(0,2*np.pi,steps)
@@ -259,14 +311,17 @@ class OutputPin:
 
     def get_points(self):
         points = []
+        centers = []
         for z in range(self.noutputs):
             pin = []
             i = z + 1
+            centers.append([- Rw *np.sin(((2*i+1)*np.pi)/(zw)), Rw * np.cos(((2*i+1)*np.pi)/(zw))])
             for t in self.tlist:
                 x = -rw * np.sin(t) - Rw *np.sin(((2*i+1)*np.pi)/(zw))
                 y = rw * np.cos(t) + Rw * np.cos(((2*i+1)*np.pi)/(zw))
                 pin.append([x,y,t])
             points.append(pin)
+        self.centers = np.array(centers)
         self.points = np.array(points)
         return self.points
 
