@@ -198,7 +198,7 @@ class OutputPinHole:
             vector = np.array([[i[0]], [i[1]]])
             new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
             centers.append([new[0,0], new[1,0]])
-        self.tcenters = np.array([centers])
+        self.tcenters = np.array(centers)
         return self.position
 
     def translate_normdir(self, degrees):
@@ -228,6 +228,7 @@ class RollerPin:
         self.txaxis = self.xaxis #position of x axis
         self.tyaxis = self.yaxis #position of y axis
         self.centers = np.array([])
+        self.tcenters = np.array([])
 
     def set_tlist(self, steps = 5000):
         self.tlist = np.linspace(0,2*np.pi,steps)
@@ -235,14 +236,17 @@ class RollerPin:
 
     def get_points(self):
         points = []
+        centers = []
         for z in range(self.nrollers):
             roller = []
             i = z + 1
+            centers.append([ - (Rp + dRp) * np.sin(2 * np.pi * (i - 1)/zp), (Rp + dRp) * np.cos(2 * np.pi * (i - 1)/zp)])
             for t in self.tlist:
                 x = -(rp + drp) * np.sin(t) - (Rp + dRp) * np.sin(2 * np.pi * (i - 1)/zp)
                 y = (rp + drp) * np.cos(t) + (Rp + dRp) * np.cos(2 * np.pi * (i - 1)/zp)
                 roller.append([x,y,t])
             points.append(roller)
+        self.centers = np.array(centers)
         self.points = np.array(points)
         return self.points
 
@@ -260,6 +264,7 @@ class RollerPin:
         position = []
         xs = []
         ys = []
+        centers = []
         for z in self.points:
             pin = []
             for i in z:
@@ -278,6 +283,11 @@ class RollerPin:
             new = np.matmul(Rp2w(degrees), vector)
             ys.append([new[0,0], new[1,0]])
         self.tyaxis = np.array(ys)
+        for i in self.centers:
+            vector = np.array([[i[0]], [i[1]]])
+            new = np.matmul(Rp2w(degrees), vector)
+            centers.append([new[0,0], new[1,0]])
+        self.tcenters = np.array(centers)    
         return self.position
 
     def translate_normdir(self, degrees):
@@ -338,3 +348,14 @@ class OutputPin:
 
     def translate_points(self):
         pass
+
+
+
+# Hertzian contact theory
+def a(Fc, p_1, p_2, E_1, E_2, v_1, v_2, concavity):
+    p_star = 0
+    if concavity == "Convex and concave":
+        p_star = abs((p_1*p_2)/(p_1-p_2))
+    if concavity == "Convex and convex": 
+        p_star = abs((p_1*p_2)/(p_1+p_2))
+    return np.sqrt((4*Fc*p_star*(E_1*(1-v_1**2)+E_2(1-v_2**2))))

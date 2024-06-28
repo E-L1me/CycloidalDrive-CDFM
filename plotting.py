@@ -31,11 +31,12 @@ plt.figure(figsize=(10,10))
 plt.plot(mycycloid.position[:,0], mycycloid.position[:,1], color="Blue")
 for i in range(cfdmclasses.zw):
     plt.plot(myoutputpinholes.position[i,:,0],myoutputpinholes.position[i,:,1], color="Orange")
-   # plt.plot(myoutputpinholes.tcenters[i,0], myoutputpinholes.tcenters[i,1], color="Orange", marker="o")    
+    plt.plot(myoutputpinholes.tcenters[i,0], myoutputpinholes.tcenters[i,1], color="Orange", marker="o")    
     plt.plot(myoutputpins.points[i,:,0],myoutputpins.points[i,:,1], color="Red")
     plt.plot(myoutputpins.centers[i,0], myoutputpins.centers[i,1], color="Red", marker="o")
 for i in range(cfdmclasses.zp):
     plt.plot(myrollerpins.position[i,:,0],myrollerpins.position[i,:,1], color="Green")
+    plt.plot(myrollerpins.tcenters[i,0],myrollerpins.tcenters[i,1], color="Green", marker="o")
 
 plt.plot(mycycloid.txaxis[:,0], mycycloid.txaxis[:,1], color="Blue")
 plt.plot(mycycloid.tyaxis[:,0], mycycloid.tyaxis[:,1], color="Blue")
