@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from dataclasses import dataclass
+import matplotlib.pyplot as plt
 
 e = 0.8  # eccentricity distance
 rp = 1.5  # roller pin radius
@@ -100,9 +101,20 @@ def cycloid_to_output_rf(i: list, degrees: float):
     newnormvec = c_to_o(i[3:5], degrees)
     return [i[0], new[0, 0], new[1, 0], newnormvec[0, 0], newnormvec[0, 1]]
 
+def start_outputpinhole(t: float, i: int):
+    x = -(rwh + drwh) * np.sin(t) - (Rwh + dRwh) * np.sin(
+        ((2 * i + 1) * np.pi) / (zw)
+    )
+    y = (rwh + drwh) * np.cos(t) + (Rwh + dRwh) * np.cos(
+        ((2 * i + 1) * np.pi) / (zw)
+    )   
+    x_dir = -np.sin(t)
+    y_dir = np.cos(t)
+    return [t, x, y, x_dir, y_dir]
 
 class Cycloid:
     num_points: int = 5000
+    color: str = "Blue"
 
     def __init__(self):
         self.tlist = np.linspace(
@@ -123,105 +135,39 @@ class Cycloid:
         self.txaxis = map(c_to_o, self.xaxis, degrees)
         self.tyaxis = map(c_to_o, self.yaxis, degrees)
         return [self.pos, self.taxis, self.tyaxis]
-
+    
+    def plot(self, degrees):
+        plt.plot(self.pos[:,1], self.pos[:,2], color=self.color)
+        plt.plot(self.txaxis[:,0], self.txaxis[:,1], color=self.color)
+        plt.plot(self.tyaxis[:, 0], self.tyaxis[:,1], color=self.color)
 
 class OutputPinHole:
+    num_points: int = 5000
+    color: str = "Blue"
+
     def __init__(self):
-        self.npins = zw
-        self.points = np.array([])  # points of the graph
-        self.normdir = np.array([])  # normal direction for each point
-        self.tlist = np.array([])  # independent variable for the parametric equations
-        self.position = np.array([])  # position of the output pin holes
-        self.pos_normdir = np.array([])  # norm dir for position of the output pin holes
+        self.npins: int = zw
+        self.tlist: np.ndarray = np.linspace(
+            0, 2 * np.pi, self.num_points
+        )  # independent variable for the parametric equations
+        self.basis = np.array(
+            [map(start_outputpinhole, self.tlist, i) for i in range(1, self.npins + 1)]
+        )  # setting fundemental points for the cycloid with the sturucture: [points, normal vector, radius of curvature]
         xs, ys = get_axes(Rp)  # axes of the cycloid
         self.xaxis = np.array(xs)  # x axis of the cycloid
         self.yaxis = np.array(ys)  # y axis
         self.txaxis = self.xaxis  # position of x axis
         self.tyaxis = self.yaxis  # position of y axis
-        self.centers = np.array([])
+        self.pos = np.empty((-1, 5))  # position of the cycloid
+        self.centers = np.array([[-(Rwh + dRwh) * np.sin(((2 * i + 1) * np.pi) / (zw)),(Rwh + dRwh) * np.cos(((2 * i + 1) * np.pi) / (zw))] for i in range(1,self.npins+1)])
         self.tcenters = np.array([])
 
-    def set_tlist(self, steps=5000):
-        self.tlist = np.linspace(0, 2 * np.pi, steps)
-        return self.tlist
-
-    def get_points(self):
-        points = []
-        centers = []
-        for z in range(self.npins):
-            pin = []
-            i = z + 1
-            centers.append(
-                [
-                    -(Rwh + dRwh) * np.sin(((2 * i + 1) * np.pi) / (zw)),
-                    +(Rwh + dRwh) * np.cos(((2 * i + 1) * np.pi) / (zw)),
-                ]
-            )
-            for t in self.tlist:
-                x = -(rwh + drwh) * np.sin(t) - (Rwh + dRwh) * np.sin(
-                    ((2 * i + 1) * np.pi) / (zw)
-                )
-                y = (rwh + drwh) * np.cos(t) + (Rwh + dRwh) * np.cos(
-                    ((2 * i + 1) * np.pi) / (zw)
-                )
-                pin.append([x, y, t])
-            points.append(pin)
-        self.centers = np.array(centers)
-        self.points = np.array(points)
-        return self.points
-
-    def get_normdir(self):
-        for i in self.points:
-            pin = np.array([])
-            for t in i:
-                x = -np.sin(t[1])
-                y = np.cos(t[1])
-                np.append(pin, (x, y, t))
-            np.append(self.normdir, pin)
-        return self.normdir
-
-    def translate_points(self, degrees):
-        position = []
-        xs = []
-        ys = []
-        for z in self.points:
-            pin = []
-            for i in z:
-                vector = np.array([[i[0]], [i[1]]])
-                new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
-                pin.append([new[0, 0], new[1, 0], i[2]])
-            position.append(pin)
-        self.position = np.array(position)
-        for i in self.xaxis:
-            vector = np.array([[i[0]], [i[1]]])
-            new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
-            xs.append([new[0, 0], new[1, 0]])
-        self.txaxis = np.array(xs)
-        for i in self.yaxis:
-            vector = np.array([[i[0]], [i[1]]])
-            new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
-            ys.append([new[0, 0], new[1, 0]])
-        self.tyaxis = np.array(ys)
-        centers = []
-        for i in self.centers:
-            vector = np.array([[i[0]], [i[1]]])
-            new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
-            centers.append([new[0, 0], new[1, 0]])
-        self.tcenters = np.array(centers)
-        return self.position
-
-    def translate_normdir(self, degrees):
-        position = []
-        for z in self.points:
-            pin = []
-            for i in z:
-                vector = np.array([[i[0]], [i[1]]])
-                new = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
-                pin.append([new[0, 0], new[1, 0], i[2]])
-            position.append(pin)
-        self.pos_normdir = np.array(position)
-        return self.pos_normdir
-
+    def set_pos(self, degrees):
+        self.pos = [map(cycloid_to_output_rf, hole, degrees) for hole in self.basis]
+        self.txaxis = map(c_to_o, self.xaxis, degrees)
+        self.tyaxis = map(c_to_o, self.yaxis, degrees)
+        self.tcenters = map(c_to_o, self.centers)
+        return [self.pos, self.taxis, self.tyaxis]
 
 class RollerPin:
     def __init__(self):
