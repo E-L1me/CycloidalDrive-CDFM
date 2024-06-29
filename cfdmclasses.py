@@ -96,21 +96,46 @@ def c_to_o(p: list, degrees: float):
     return np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
 
 
+def r_to_o(p: list, degrees: float):
+    vector = np.array([[p[0]], [p[1]]])
+    return np.matmul(Rp2w(degrees), vector)
+
+
 def cycloid_to_output_rf(i: list, degrees: float):
     new = c_to_o(i[1:3], degrees)
     newnormvec = c_to_o(i[3:5], degrees)
+    return [i[0], new[0, 0], new[1, 0], newnormvec[0, 0], newnormvec[1, 0]]
+
+
+def rollerpins_to_output_rf(i: list, degrees: float):
+    new = r_to_o(i[1:3], degrees)
+    newnormvec = r_to_o(i[3:5], degrees)
     return [i[0], new[0, 0], new[1, 0], newnormvec[0, 0], newnormvec[0, 1]]
 
+
 def start_outputpinhole(t: float, i: int):
-    x = -(rwh + drwh) * np.sin(t) - (Rwh + dRwh) * np.sin(
-        ((2 * i + 1) * np.pi) / (zw)
-    )
-    y = (rwh + drwh) * np.cos(t) + (Rwh + dRwh) * np.cos(
-        ((2 * i + 1) * np.pi) / (zw)
-    )   
+    x = -(rwh + drwh) * np.sin(t) - (Rwh + dRwh) * np.sin(((2 * i + 1) * np.pi) / (zw))
+    y = (rwh + drwh) * np.cos(t) + (Rwh + dRwh) * np.cos(((2 * i + 1) * np.pi) / (zw))
     x_dir = -np.sin(t)
     y_dir = np.cos(t)
     return [t, x, y, x_dir, y_dir]
+
+
+def start_rollerpin(t: float, i: int):
+    x = -(rp + drp) * np.sin(t) - (Rp + dRp) * np.sin(2 * np.pi * (i - 1) / zp)
+    y = (rp + drp) * np.cos(t) + (Rp + dRp) * np.cos(2 * np.pi * (i - 1) / zp)
+    x_dir = -np.sin(t)
+    y_dir = np.cos(t)
+    return [t, x, y, x_dir, y_dir]
+
+
+def start_outputpin(t: float, i: int):
+    x = -rw * np.sin(t) - Rw * np.sin(((2 * i + 1) * np.pi) / (zw))
+    y = rw * np.cos(t) + Rw * np.cos(((2 * i + 1) * np.pi) / (zw))
+    x_dir = -np.sin(t)
+    y_dir = np.cos(t)
+    return [t, x, y, x_dir, y_dir]
+
 
 class Cycloid:
     num_points: int = 5000
@@ -128,20 +153,22 @@ class Cycloid:
         self.yaxis = np.array(ys)  # y axis
         self.txaxis = self.xaxis  # position of x axis
         self.tyaxis = self.yaxis  # position of y axis
-        self.pos = np.empty((-1, 5))  # position of the cycloid
+        self.pos = np.empty(2)  # position of the cycloid
 
     def set_pos(self, degrees):
-        self.pos = map(cycloid_to_output_rf, self.basis, degrees)
-        self.txaxis = map(c_to_o, self.xaxis, degrees)
-        self.tyaxis = map(c_to_o, self.yaxis, degrees)
-        return [self.pos, self.taxis, self.tyaxis]
-    
-    def plot(self, degrees):
-        plt.plot(self.pos[:,1], self.pos[:,2], color=self.color)
-        plt.plot(self.txaxis[:,0], self.txaxis[:,1], color=self.color)
-        plt.plot(self.tyaxis[:, 0], self.tyaxis[:,1], color=self.color)
+        d = [degrees for j in range(self.basis.shape[0])]
+        self.pos = np.array(list(map(cycloid_to_output_rf, self.basis, d)))
+        self.txaxis = np.array(list(map(c_to_o, self.xaxis, d)))
+        self.tyaxis = np.array(list(map(c_to_o, self.yaxis, d)))
+        return [self.pos, self.txaxis, self.tyaxis]
 
-class OutputPinHole:
+    def plot(self):
+        plt.plot(self.pos[:, 1], self.pos[:, 2], color=self.color)
+        plt.plot(self.txaxis[:, 0], self.txaxis[:, 1], color=self.color)
+        plt.plot(self.tyaxis[:, 0], self.tyaxis[:, 1], color=self.color)
+
+
+class OutputPinHoles:
     num_points: int = 5000
     color: str = "Blue"
 
@@ -151,172 +178,145 @@ class OutputPinHole:
             0, 2 * np.pi, self.num_points
         )  # independent variable for the parametric equations
         self.basis = np.array(
-            [map(start_outputpinhole, self.tlist, i) for i in range(1, self.npins + 1)]
+            [
+                list(
+                    map(
+                        start_outputpinhole,
+                        self.tlist,
+                        [i for j in range(self.tlist.shape[0])],
+                    ))
+                    for i in range(1, self.npins + 1)
+            ]
         )  # setting fundemental points for the cycloid with the sturucture: [points, normal vector, radius of curvature]
         xs, ys = get_axes(Rp)  # axes of the cycloid
         self.xaxis = np.array(xs)  # x axis of the cycloid
         self.yaxis = np.array(ys)  # y axis
         self.txaxis = self.xaxis  # position of x axis
         self.tyaxis = self.yaxis  # position of y axis
-        self.pos = np.empty((-1, 5))  # position of the cycloid
-        self.centers = np.array([[-(Rwh + dRwh) * np.sin(((2 * i + 1) * np.pi) / (zw)),(Rwh + dRwh) * np.cos(((2 * i + 1) * np.pi) / (zw))] for i in range(1,self.npins+1)])
-        self.tcenters = np.array([])
+        self.pos = np.empty(2)  # position of the cycloid
+        self.centers = np.array(
+            [
+                [
+                    -(Rwh + dRwh) * np.sin(((2 * i + 1) * np.pi) / (zw)),
+                    (Rwh + dRwh) * np.cos(((2 * i + 1) * np.pi) / (zw)),
+                ]
+                for i in range(1, self.npins + 1)
+            ]
+        )
+        self.tcenters = self.centers
 
     def set_pos(self, degrees):
-        self.pos = [map(cycloid_to_output_rf, hole, degrees) for hole in self.basis]
-        self.txaxis = map(c_to_o, self.xaxis, degrees)
-        self.tyaxis = map(c_to_o, self.yaxis, degrees)
-        self.tcenters = map(c_to_o, self.centers)
-        return [self.pos, self.taxis, self.tyaxis]
+        d = [degrees for j in range(self.basis.shape[0])]
+        self.pos = np.array([np.array(list(map(cycloid_to_output_rf, hole, d))) for hole in self.basis])
+        self.txaxis = np.array(list(map(c_to_o, self.xaxis, d)))
+        self.tyaxis = np.array(list(map(c_to_o, self.yaxis, d)))
+        self.tcenters = np.array(list(map(c_to_o, self.centers, d)))
+        return [self.pos, self.txaxis, self.tyaxis]
 
-class RollerPin:
+    def plot(self):
+        for i in range(self.npins):
+            plt.plot(self.pos[i, :, 1:3], color=self.color)
+        plt.plot(self.txaxis[:, :, 0], color=self.color)
+        plt.plot(self.tyaxis[:, :, 0], color=self.color)
+        plt.plot(self.tcenters[:, :, 0], color=self.color)
+
+
+class RollerPins:
+    num_points: int = 5000
+    color: str = "Green"
+
     def __init__(self):
-        self.nrollers = zp
-        self.points = np.array([])  # points of the graph
-        self.normdir = np.array([])  # normal direction for each point
-        self.tlist = np.array([])  # independent variable for the parametric equations
-        self.position = np.array([])  # position of the roller pins
-        self.pos_normdir = np.array([])  # norm dir for position of the roller pins
+        self.npins: int = zw
+        self.tlist: np.ndarray = np.linspace(
+            0, 2 * np.pi, self.num_points
+        )  # independent variable for the parametric equations
+        self.basis = np.array(
+            [
+                np.array(
+                    list(map(
+                        start_rollerpin,
+                        self.tlist,
+                        [i for j in range(self.tlist.shape[0])],
+                    )
+                ))
+                for i in range(1, self.npins + 1)
+            ]
+        )  # setting fundemental points for the cycloid with the sturucture: [points, normal vector, radius of curvature]
         xs, ys = get_axes(Rp)  # axes of the cycloid
         self.xaxis = np.array(xs)  # x axis of the cycloid
         self.yaxis = np.array(ys)  # y axis
         self.txaxis = self.xaxis  # position of x axis
         self.tyaxis = self.yaxis  # position of y axis
-        self.centers = np.array([])
-        self.tcenters = np.array([])
-
-    def set_tlist(self, steps=5000):
-        self.tlist = np.linspace(0, 2 * np.pi, steps)
-        return self.tlist
-
-    def get_points(self):
-        points = []
-        centers = []
-        for z in range(self.nrollers):
-            roller = []
-            i = z + 1
-            centers.append(
+        self.pos = np.empty(2)  # position of the cycloid
+        self.centers = np.array(
+            [
                 [
                     -(Rp + dRp) * np.sin(2 * np.pi * (i - 1) / zp),
                     (Rp + dRp) * np.cos(2 * np.pi * (i - 1) / zp),
                 ]
-            )
-            for t in self.tlist:
-                x = -(rp + drp) * np.sin(t) - (Rp + dRp) * np.sin(
-                    2 * np.pi * (i - 1) / zp
-                )
-                y = (rp + drp) * np.cos(t) + (Rp + dRp) * np.cos(
-                    2 * np.pi * (i - 1) / zp
-                )
-                roller.append([x, y, t])
-            points.append(roller)
-        self.centers = np.array(centers)
-        self.points = np.array(points)
-        return self.points
+                for i in range(1, self.npins + 1)
+            ]
+        )
+        self.tcenters = self.centers
 
-    def get_normdir(self):
-        for i in self.points:
-            roller = np.array([])
-            for t in i:
-                x = -np.sin(t[1])
-                y = np.cos(t[1])
-                np.append(roller, (x, y, t))
-            np.append(self.normdir, roller)
-        return self.normdir
+    def set_pos(self, degrees):
+        d = [degrees for j in range(self.basis.shape[0])]
+        self.pos = [np.array(map(rollerpins_to_output_rf, pin, d)) for pin in self.basis]
+        self.txaxis = np.array(map(r_to_o, self.xaxis, d))
+        self.tyaxis = np.array(map(r_to_o, self.yaxis, d))
+        self.tcenters = np.array(map(r_to_o, self.centers))
+        return [self.pos, self.txaxis, self.tyaxis]
 
-    def translate_points(self, degrees):
-        position = []
-        xs = []
-        ys = []
-        centers = []
-        for z in self.points:
-            pin = []
-            for i in z:
-                vector = np.array([[i[0]], [i[1]]])
-                new = np.matmul(Rp2w(degrees), vector)
-                pin.append([new[0, 0], new[1, 0], i[2]])
-            position.append(pin)
-        self.position = np.array(position)
-        for i in self.xaxis:
-            vector = np.array([[i[0]], [i[1]]])
-            new = np.matmul(Rp2w(degrees), vector)
-            xs.append([new[0, 0], new[1, 0]])
-        self.txaxis = np.array(xs)
-        for i in self.yaxis:
-            vector = np.array([[i[0]], [i[1]]])
-            new = np.matmul(Rp2w(degrees), vector)
-            ys.append([new[0, 0], new[1, 0]])
-        self.tyaxis = np.array(ys)
-        for i in self.centers:
-            vector = np.array([[i[0]], [i[1]]])
-            new = np.matmul(Rp2w(degrees), vector)
-            centers.append([new[0, 0], new[1, 0]])
-        self.tcenters = np.array(centers)
-        return self.position
-
-    def translate_normdir(self, degrees):
-        position = []
-        for z in self.normdir:
-            pin = []
-            for i in z:
-                vector = np.array([[i[0]], [i[1]]])
-                new = np.matmul(Rp2w(degrees), vector)
-                pin.append([new[0, 0], new[1, 0], i[2]])
-            position.append(pin)
-        self.pos_normdir = np.array(position)
-        return self.pos_normdir
+    def plot(self):
+        for i in range(self.npins):
+            plt.plot(self.pos[i, :, 1:3], color=self.color)
+        plt.plot(self.txaxis, color=self.color)
+        plt.plot(self.tyaxis, color=self.color)
+        plt.plot(self.tcenters, color=self.color)
 
 
-class OutputPin:
+class OutputPins:
+    num_points: int = 5000
+    color: str = "Black"
+
     def __init__(self):
-        self.noutputs = zw
-        self.points = np.array([])  # points of the graph
-        self.normdir = np.array([])  # normal direction for each point
-        self.tlist = np.array([])  # independent variable for the parametric equations
+        self.npins: int = zw
+        self.tlist: np.ndarray = np.linspace(
+            0, 2 * np.pi, self.num_points
+        )  # independent variable for the parametric equations
+        self.basis = np.array(
+            [
+                np.array(
+                    map(
+                        start_outputpinhole,
+                        self.tlist,
+                        [i for j in range(self.tlist.shape[0])],
+                    )
+                    for i in range(1, self.npins + 1)
+                )
+            ]
+        )  # setting fundemental points for the cycloid with the sturucture: [points, normal vector, radius of curvature]
         xs, ys = get_axes(Rp)  # axes of the cycloid
         self.xaxis = np.array(xs)  # x axis of the cycloid
         self.yaxis = np.array(ys)  # y axis
         self.txaxis = self.xaxis  # position of x axis
         self.tyaxis = self.yaxis  # position of y axis
-        self.centers = np.array([])
-
-    def set_tlist(self, steps=5000):
-        self.tlist = np.linspace(0, 2 * np.pi, steps)
-        return self.tlist
-
-    def get_points(self):
-        points = []
-        centers = []
-        for z in range(self.noutputs):
-            pin = []
-            i = z + 1
-            centers.append(
+        self.centers = np.array(
+            [
                 [
                     -Rw * np.sin(((2 * i + 1) * np.pi) / (zw)),
                     Rw * np.cos(((2 * i + 1) * np.pi) / (zw)),
                 ]
-            )
-            for t in self.tlist:
-                x = -rw * np.sin(t) - Rw * np.sin(((2 * i + 1) * np.pi) / (zw))
-                y = rw * np.cos(t) + Rw * np.cos(((2 * i + 1) * np.pi) / (zw))
-                pin.append([x, y, t])
-            points.append(pin)
-        self.centers = np.array(centers)
-        self.points = np.array(points)
-        return self.points
+                for i in range(1, self.npins + 1)
+            ]
+        )
 
-    def get_normdir(self):
-        for i in self.points:
-            pin = np.array([])
-            for t in i:
-                x = -np.sin(t[1])
-                y = np.cos(t[1])
-                np.append(pin, (x, y, t))
-            np.append(self.normdir, pin)
-        return self.normdir
-
-    def translate_points(self):
-        pass
+    def plot(self):
+        for i in range(self.npins):
+            plt.plot(self.pos[i, :, 1:3], color=self.color)
+        plt.plot(self.txaxis, color=self.color)
+        plt.plot(self.tyaxis, color=self.color)
+        plt.plot(self.tcenters, color=self.color)
 
 
 @dataclass
