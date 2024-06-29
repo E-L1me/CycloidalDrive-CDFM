@@ -16,8 +16,10 @@ outputpins = cfdmclasses.OutputPins()
 
 #plotting
 plt.figure(figsize=(10,10))
-for i in [cycloid, outputpinholes, rollerpins, outputpins]:
+for i in [cycloid, outputpinholes, rollerpins]:
     i.set_pos(angle)
     i.plot()
+
+outputpins.plot
 
 plt.savefig("plot")

@@ -110,7 +110,7 @@ def cycloid_to_output_rf(i: list, degrees: float):
 def rollerpins_to_output_rf(i: list, degrees: float):
     new = r_to_o(i[1:3], degrees)
     newnormvec = r_to_o(i[3:5], degrees)
-    return [i[0], new[0, 0], new[1, 0], newnormvec[0, 0], newnormvec[0, 1]]
+    return [i[0], new[0, 0], new[1, 0], newnormvec[0, 0], newnormvec[1, 0]]
 
 
 def start_outputpinhole(t: float, i: int):
@@ -261,18 +261,18 @@ class RollerPins:
 
     def set_pos(self, degrees):
         d = [degrees for j in range(self.basis.shape[0])]
-        self.pos = [np.array(map(rollerpins_to_output_rf, pin, d)) for pin in self.basis]
-        self.txaxis = np.array(map(r_to_o, self.xaxis, d))
-        self.tyaxis = np.array(map(r_to_o, self.yaxis, d))
-        self.tcenters = np.array(map(r_to_o, self.centers))
+        self.pos = np.array([np.array(list(map(rollerpins_to_output_rf, pin, d))) for pin in self.basis])
+        self.txaxis = np.array(list(map(r_to_o, self.xaxis, d)))
+        self.tyaxis = np.array(list(map(r_to_o, self.yaxis, d)))
+        self.tcenters = np.array(list(map(r_to_o, self.centers, d)))
         return [self.pos, self.txaxis, self.tyaxis]
 
     def plot(self):
         for i in range(self.npins):
             plt.plot(self.pos[i, :, 1:3], color=self.color)
-        plt.plot(self.txaxis, color=self.color)
-        plt.plot(self.tyaxis, color=self.color)
-        plt.plot(self.tcenters, color=self.color)
+        plt.plot(self.txaxis[:,:,0], color=self.color)
+        plt.plot(self.tyaxis[:,:,0], color=self.color)
+        plt.plot(self.tcenters[:,:,0], color=self.color)
 
 
 class OutputPins:
@@ -287,11 +287,11 @@ class OutputPins:
         self.basis = np.array(
             [
                 np.array(
-                    map(
+                    list(map(
                         start_outputpinhole,
                         self.tlist,
                         [i for j in range(self.tlist.shape[0])],
-                    )
+                    ))
                     for i in range(1, self.npins + 1)
                 )
             ]
@@ -313,7 +313,7 @@ class OutputPins:
 
     def plot(self):
         for i in range(self.npins):
-            plt.plot(self.pos[i, :, 1:3], color=self.color)
+            plt.plot(self.basis[i, :, 1:3], color=self.color)
         plt.plot(self.txaxis, color=self.color)
         plt.plot(self.tyaxis, color=self.color)
         plt.plot(self.tcenters, color=self.color)
