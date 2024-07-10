@@ -22,4 +22,16 @@ for i in [cycloid, outputpinholes, rollerpins]:
 
 outputpins.plot
 
+plt.grid()
+
 plt.savefig("plot")
+
+#a few ideas on why the graphing could be causing problems: 
+# - linespace arguments are wrong?
+# - other arguments are wrong
+# - one of the intermediary functions crush something to a smaller size
+# - not all points are passed through?
+# - pyplot can't handle all the points?
+# - something large is divinding everything
+# - the limiting/shrinking is happening in both the graphs of the circles and the graphs of the axes, so somthing fundemental is wrong?
+# - so linespace problem?

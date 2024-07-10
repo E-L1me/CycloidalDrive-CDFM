@@ -326,7 +326,7 @@ class Material:
 
 
 # Hertzian contact theory
-def a(Fc, m_1: Material, m_2: Material, concavity):  # half the contact deformation width
+def a(Fc, m_1: Material, m_2: Material, b, concavity):  # half the contact deformation width
     p_star = 0
     if concavity == "Convex and concave":
         p_star = abs((m_1.p * m_2.p) / (m_1.p - m_2.p))
