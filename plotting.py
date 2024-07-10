@@ -1,17 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import cfdmclasses
+import cycloidgeometry
 
 angle = 0
 
 #creating objects
-cycloid = cfdmclasses.Cycloid()
+cycloid = cycloidgeometry.Cycloid()
 
-outputpinholes = cfdmclasses.OutputPinHoles()
+outputpinholes = cycloidgeometry.OutputPinHoles()
 
-rollerpins = cfdmclasses.RollerPins()
+rollerpins = cycloidgeometry.RollerPins()
 
-outputpins = cfdmclasses.OutputPins()
+outputpins = cycloidgeometry.OutputPins()
 
 
 #plotting

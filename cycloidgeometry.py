@@ -60,57 +60,50 @@ def get_axes(r, steps=100):
     return xs, ys
 
 
-def start_cycloid(t: float):
-    K1 = (e * zp) / (Rp + dRp)
-    x = (
-        (Rp + dRp) * np.sin(t)
-        - e * np.sin(zp * t)
-        + ((K1 * np.sin(zp * t) - np.sin(t)) * (rp + drp))
-        / (math.sqrt(1 + K1**2 - 2 * K1 * np.cos(zc * t)))
-    )
-    y = (
-        (Rp + dRp) * np.cos(t)
-        - e * np.cos(zp * t)
-        + ((K1 * np.cos(zp * t) - np.cos(t)) * (rp + drp))
-        / (math.sqrt(1 + K1**2 - 2 * K1 * np.cos(zc * t)))
-    )
-    x_dir = (x - zc * e * np.sin(zp * t)) / (
-        math.sqrt(
-            (x - zc * e * np.sin(zp * t)) ** 2 + (x - zc * e * np.cos(zp * t)) ** 2
-        )
-    )
-    y_dir = (y - zc * e * np.cos(zp * t)) / (
-        math.sqrt(
-            (y - zc * e * np.sin(zp * t)) ** 2 + (y - zc * e * np.cos(zp * t)) ** 2
-        )
-    )
-    K1 = (e * zp) / (Rp + dRp)
-    pc = (1 + K1**2 - 2 * K1 * np.cos(zc * t)) ** 1.5 / (
-        K1 * (1 + zp) * np.cos(zc * t - zp * K1**2 - 1)
-    )
-    return [t, x, y, x_dir, y_dir, pc]
-
-
 def c_to_o(p: list, degrees: float):
     vector = np.array([[p[0]], [p[1]]])
-    return np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+    ret = np.matmul(Rc2w(degrees), vector) + Pc2w(degrees)
+    return ret.flatten()
 
 
 def r_to_o(p: list, degrees: float):
     vector = np.array([[p[0]], [p[1]]])
-    return np.matmul(Rp2w(degrees), vector)
+    ret = np.matmul(Rp2w(degrees), vector)
+    return ret.flatten()
 
 
 def cycloid_to_output_rf(i: list, degrees: float):
     new = c_to_o(i[1:3], degrees)
     newnormvec = c_to_o(i[3:5], degrees)
-    return [i[0], new[0, 0], new[1, 0], newnormvec[0, 0], newnormvec[1, 0]]
+    return [i[0], new[0], new[1], newnormvec[0], newnormvec[1]]
 
 
 def rollerpins_to_output_rf(i: list, degrees: float):
     new = r_to_o(i[1:3], degrees)
     newnormvec = r_to_o(i[3:5], degrees)
-    return [i[0], new[0, 0], new[1, 0], newnormvec[0, 0], newnormvec[1, 0]]
+    return [i[0], new[0], new[1], newnormvec[0], newnormvec[1]]
+
+def start_cycloid(t: float):
+    K1 = (e * zp) / (Rp + dRp)
+    x = (
+        (Rp + dRp) * np.sin(t)
+        - e * np.sin(zp * t)
+        + ((K1 * np.sin(zp * t) - np.sin(t)) * (rp + drp)) / (math.sqrt(1 + K1**2 - 2 * K1 * np.cos(zc * t)))
+    )
+    y = (
+        (Rp + dRp) * np.cos(t)
+        - e * np.cos(zp * t)
+        + ((K1 * np.cos(zp * t) - np.cos(t)) * (rp + drp)) / (math.sqrt(1 + K1**2 - 2 * K1 * np.cos(zc * t)))
+    )
+    x_dir = (x - zc * e * np.sin(zp * t)) / (
+        math.sqrt((x - zc * e * np.sin(zp * t)) ** 2 + (x - zc * e * np.cos(zp * t)) ** 2)
+    )
+    y_dir = (y - zc * e * np.cos(zp * t)) / (
+        math.sqrt((y - zc * e * np.sin(zp * t)) ** 2 + (y - zc * e * np.cos(zp * t)) ** 2)
+    )
+    K1 = (e * zp) / (Rp + dRp)
+    pc = (1 + K1**2 - 2 * K1 * np.cos(zc * t)) ** 1.5 / (K1 * (1 + zp) * np.cos(zc * t - zp * K1**2 - 1))
+    return [t, x, y, x_dir, y_dir, pc]
 
 
 def start_outputpinhole(t: float, i: int):
@@ -142,18 +135,16 @@ class Cycloid:
     color: str = "Blue"
 
     def __init__(self):
-        self.tlist = np.linspace(
-            0, 2 * np.pi, self.num_points
-        )  # independent variable for the parametric equations
-        self.basis = np.array(
+        self.tlist: np.ndarray = np.linspace(0, 2 * np.pi, self.num_points)  # independent variable for the parametric equations
+        self.basis: np.ndarray = np.array(
             list(map(start_cycloid, self.tlist))
         )  # setting fundemental points for the cycloid with the sturucture: [points, normal vector, radius of curvature]
         xs, ys = get_axes(Rp)  # axes of the cycloid
-        self.xaxis = np.array(xs)  # x axis of the cycloid
-        self.yaxis = np.array(ys)  # y axis
-        self.txaxis = self.xaxis  # position of x axis
-        self.tyaxis = self.yaxis  # position of y axis
-        self.pos = np.empty(2)  # position of the cycloid
+        self.xaxis: np.ndarray = np.array(xs)  # x axis of the cycloid
+        self.yaxis: np.ndarray = np.array(ys)  # y axis
+        self.txaxis: np.ndarray = self.xaxis  # position of x axis
+        self.tyaxis: np.ndarray = self.yaxis  # position of y axis
+        self.pos: np.ndarray = np.empty(2)  # position of the cycloid
 
     def set_pos(self, degrees):
         d = [degrees for j in range(self.basis.shape[0])]
@@ -170,24 +161,27 @@ class Cycloid:
 
 class OutputPinHoles:
     num_points: int = 5000
-    color: str = "Blue"
+    color: str = "Orange"
 
     def __init__(self):
         self.npins: int = zw
         self.tlist: np.ndarray = np.linspace(
             0, 2 * np.pi, self.num_points
         )  # independent variable for the parametric equations
+        print(f"self.tlist: {self.tlist}")
         self.basis = np.array(
             [
                 list(
                     map(
                         start_outputpinhole,
                         self.tlist,
-                        [i for j in range(self.tlist.shape[0])],
-                    ))
-                    for i in range(1, self.npins + 1)
+                        [i for j in range(self.num_points)],
+                    )
+                )
+                for i in range(1, self.npins + 1)
             ]
         )  # setting fundemental points for the cycloid with the sturucture: [points, normal vector, radius of curvature]
+        print(f"self.basis: {self.basis}")
         xs, ys = get_axes(Rp)  # axes of the cycloid
         self.xaxis = np.array(xs)  # x axis of the cycloid
         self.yaxis = np.array(ys)  # y axis
@@ -211,14 +205,15 @@ class OutputPinHoles:
         self.txaxis = np.array(list(map(c_to_o, self.xaxis, d)))
         self.tyaxis = np.array(list(map(c_to_o, self.yaxis, d)))
         self.tcenters = np.array(list(map(c_to_o, self.centers, d)))
+        print(f"self.pos: {self.pos}")
         return [self.pos, self.txaxis, self.tyaxis]
 
     def plot(self):
         for i in range(self.npins):
-            plt.plot(self.pos[i, :, 1:3], color=self.color)
-        plt.plot(self.txaxis[:, :, 0], color=self.color)
-        plt.plot(self.tyaxis[:, :, 0], color=self.color)
-        plt.plot(self.tcenters[:, :, 0], color=self.color)
+            plt.plot(self.pos[i, :, 1], self.pos[i, :, 2], color=self.color)
+        plt.plot(self.txaxis[:, 0], self.txaxis[:, 1], color=self.color)
+        plt.plot(self.tyaxis[:, 0], self.tyaxis[:, 1], color=self.color)
+        plt.plot(self.tcenters[:, 0], self.tcenters[:, 1], "o", color=self.color)
 
 
 class RollerPins:
@@ -233,12 +228,14 @@ class RollerPins:
         self.basis = np.array(
             [
                 np.array(
-                    list(map(
-                        start_rollerpin,
-                        self.tlist,
-                        [i for j in range(self.tlist.shape[0])],
+                    list(
+                        map(
+                            start_rollerpin,
+                            self.tlist,
+                            [i for j in range(self.tlist.shape[0])],
+                        )
                     )
-                ))
+                )
                 for i in range(1, self.npins + 1)
             ]
         )  # setting fundemental points for the cycloid with the sturucture: [points, normal vector, radius of curvature]
@@ -269,10 +266,10 @@ class RollerPins:
 
     def plot(self):
         for i in range(self.npins):
-            plt.plot(self.pos[i, :, 1:3], color=self.color)
-        plt.plot(self.txaxis[:,:,0], color=self.color)
-        plt.plot(self.tyaxis[:,:,0], color=self.color)
-        plt.plot(self.tcenters[:,:,0], color=self.color)
+            plt.plot(self.pos[i, :, 1], self.pos[i, :, 2], color=self.color)
+        plt.plot(self.txaxis[:, 0], self.txaxis[:, 1], color=self.color)
+        plt.plot(self.tyaxis[:, 0], self.tyaxis[:, 1], color=self.color)
+        plt.plot(self.tcenters[:, 0], self.tcenters[:, 1], "o", color=self.color)
 
 
 class OutputPins:
@@ -287,11 +284,13 @@ class OutputPins:
         self.basis = np.array(
             [
                 np.array(
-                    list(map(
-                        start_outputpinhole,
-                        self.tlist,
-                        [i for j in range(self.tlist.shape[0])],
-                    ))
+                    list(
+                        map(
+                            start_outputpinhole,
+                            self.tlist,
+                            [i for j in range(self.tlist.shape[0])],
+                        )
+                    )
                     for i in range(1, self.npins + 1)
                 )
             ]
@@ -299,8 +298,8 @@ class OutputPins:
         xs, ys = get_axes(Rp)  # axes of the cycloid
         self.xaxis = np.array(xs)  # x axis of the cycloid
         self.yaxis = np.array(ys)  # y axis
-        self.txaxis = self.xaxis  # position of x axis
-        self.tyaxis = self.yaxis  # position of y axis
+        self.txaxis = self.xaxis
+        self.tyaxis = self.yaxis
         self.centers = np.array(
             [
                 [
@@ -314,9 +313,9 @@ class OutputPins:
     def plot(self):
         for i in range(self.npins):
             plt.plot(self.basis[i, :, 1:3], color=self.color)
-        plt.plot(self.txaxis, color=self.color)
-        plt.plot(self.tyaxis, color=self.color)
-        plt.plot(self.tcenters, color=self.color)
+        plt.plot(self.xaxis[:, 0], self.xaxis[:, 1], color=self.color)
+        plt.plot(self.yaxis[:, 0], self.xaxis[:, 1], color=self.color)
+        plt.plot(self.centers[:, 0], self.centers[:, 1], "o", color=self.color)
 
 
 @dataclass
@@ -327,18 +326,13 @@ class Material:
 
 
 # Hertzian contact theory
-def a(
-    Fc, m_1: Material, m_2: Material, concavity
-):  # half the contact deformation width
+def a(Fc, m_1: Material, m_2: Material, concavity):  # half the contact deformation width
     p_star = 0
     if concavity == "Convex and concave":
         p_star = abs((m_1.p * m_2.p) / (m_1.p - m_2.p))
     if concavity == "Convex and convex":
         p_star = abs((m_1.p * m_2.p) / (m_1.p + m_2.p))
-    return np.sqrt(
-        (4 * Fc * p_star * (m_1.e * (1 - m_1.v**2) + m_2.e(1 - m_2.v**2)))
-        / (np.pi * b * m_1.e * m_2.e)
-    )
+    return np.sqrt((4 * Fc * p_star * (m_1.e * (1 - m_1.v**2) + m_2.e(1 - m_2.v**2))) / (np.pi * b * m_1.e * m_2.e))
 
 
 def delta(Fc, m_1: Material, m_2: Material, b, concavity):  # deformation
