@@ -168,7 +168,6 @@ class OutputPinHoles:
         self.tlist: np.ndarray = np.linspace(
             0, 2 * np.pi, self.num_points
         )  # independent variable for the parametric equations
-        print(f"self.tlist: {self.tlist}")
         self.basis = np.array(
             [
                 list(
@@ -181,7 +180,6 @@ class OutputPinHoles:
                 for i in range(1, self.npins + 1)
             ]
         )  # setting fundemental points for the cycloid with the sturucture: [points, normal vector, radius of curvature]
-        print(f"self.basis: {self.basis}")
         xs, ys = get_axes(Rp)  # axes of the cycloid
         self.xaxis = np.array(xs)  # x axis of the cycloid
         self.yaxis = np.array(ys)  # y axis
@@ -200,12 +198,11 @@ class OutputPinHoles:
         self.tcenters = self.centers
 
     def set_pos(self, degrees):
-        d = [degrees for j in range(self.basis.shape[0])]
+        d = [degrees for j in range(self.num_points)]
         self.pos = np.array([np.array(list(map(cycloid_to_output_rf, hole, d))) for hole in self.basis])
         self.txaxis = np.array(list(map(c_to_o, self.xaxis, d)))
         self.tyaxis = np.array(list(map(c_to_o, self.yaxis, d)))
         self.tcenters = np.array(list(map(c_to_o, self.centers, d)))
-        print(f"self.pos: {self.pos}")
         return [self.pos, self.txaxis, self.tyaxis]
 
     def plot(self):
@@ -257,7 +254,7 @@ class RollerPins:
         self.tcenters = self.centers
 
     def set_pos(self, degrees):
-        d = [degrees for j in range(self.basis.shape[0])]
+        d = [degrees for j in range(self.num_points)]
         self.pos = np.array([np.array(list(map(rollerpins_to_output_rf, pin, d))) for pin in self.basis])
         self.txaxis = np.array(list(map(r_to_o, self.xaxis, d)))
         self.tyaxis = np.array(list(map(r_to_o, self.yaxis, d)))
@@ -282,18 +279,14 @@ class OutputPins:
             0, 2 * np.pi, self.num_points
         )  # independent variable for the parametric equations
         self.basis = np.array(
-            [
-                np.array(
-                    list(
+                    [list(
                         map(
                             start_outputpinhole,
                             self.tlist,
-                            [i for j in range(self.tlist.shape[0])],
+                            [i for j in range(self.num_points)],
                         )
                     )
-                    for i in range(1, self.npins + 1)
-                )
-            ]
+                    for i in range(1, self.npins + 1)]
         )  # setting fundemental points for the cycloid with the sturucture: [points, normal vector, radius of curvature]
         xs, ys = get_axes(Rp)  # axes of the cycloid
         self.xaxis = np.array(xs)  # x axis of the cycloid
@@ -311,8 +304,9 @@ class OutputPins:
         )
 
     def plot(self):
+        print(self.basis)
         for i in range(self.npins):
-            plt.plot(self.basis[i, :, 1:3], color=self.color)
+            plt.plot(self.basis[i-1,:, 1], self.basis[i-1, :, 2], color=self.color)
         plt.plot(self.xaxis[:, 0], self.xaxis[:, 1], color=self.color)
         plt.plot(self.yaxis[:, 0], self.xaxis[:, 1], color=self.color)
         plt.plot(self.centers[:, 0], self.centers[:, 1], "o", color=self.color)

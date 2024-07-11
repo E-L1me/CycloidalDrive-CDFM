@@ -20,7 +20,7 @@ for i in [cycloid, outputpinholes, rollerpins]:
     i.set_pos(angle)
     i.plot()
 
-outputpins.plot
+outputpins.plot()
 
 plt.grid()
 
