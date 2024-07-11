@@ -2,17 +2,23 @@ import numpy as np
 import math
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
+import json
 
-e = 0.8  # eccentricity distance
-rp = 1.5  # roller pin radius
-Rp = 30  # roller pin distribution radius
-zc = 29  # number of cycloidal teeth
+f = open('constants.json')
+
+e, rp, Rp, zc, rw, Rw, zw, re, rec, de, drwh, dRwh, drp, dRp = json.load(f)
+
+
+e = int(e)  # eccentricity distance
+rp = int(rp)  # roller pin radius
+Rp = int(Rp)  # roller pin distribution radius
+zc = int(zc)  # number of cycloidal teeth
 zp = zc + 1  # number of roller pins
-rw = 3.5  # output pin radius
-Rw = 21  # output pin distribution radius
+rw = int(rw)  # output pin radius
+Rw = int(Rw)  # output pin distribution radius
 rwh = rw + e  # output pin hole radius
-Rwh = Rw  # output pin hole distribution radius
-zw = 8  # number of output pins
+Rwh = Rw # output pin hole distribution radius
+zw = int(zw)  # number of output pins
 # omegain = #input drive speed
 # omegaout = #output drive speed
 
@@ -24,17 +30,17 @@ zw = 8  # number of output pins
 #     Iep = omegaout/omegain = zp/(zp - zc) = zp #theoretical transmission ratio
 
 
-re = 8  # radius of input shaft
-rec = 15  # baring radius of eccentric shaft in contact with cycloidal gear
+re = int(re)  # radius of input shaft
+rec = int(rec)  # baring radius of eccentric shaft in contact with cycloidal gear
 
 
-de = 0  # eccentric shaft deviation
+de = int(de)  # eccentric shaft deviation
 
-drwh = 0  # deviation in radius of pin-hole
-dRwh = 0  # deviation in radius of distribution of pin-hole
+drwh = int(drwh)  # deviation in radius of pin-hole
+dRwh = int(dRwh)  # deviation in radius of distribution of pin-hole
 
-drp = 0  # deviation in radius of roller pin
-dRp = 0  # deviation in radius of distribution of roller pin
+drp = int(drp)  # deviation in radius of roller pin
+dRp = int(dRp)  # deviation in radius of distribution of roller pin
 
 
 # translation matricies
@@ -161,7 +167,7 @@ class Cycloid:
 
 class OutputPinHoles:
     num_points: int = 5000
-    color: str = "Orange"
+    color: str = "Blue"
 
     def __init__(self):
         self.npins: int = zw
@@ -218,13 +224,12 @@ class RollerPins:
     color: str = "Green"
 
     def __init__(self):
-        self.npins: int = zw
+        self.npins: int = Rp
         self.tlist: np.ndarray = np.linspace(
             0, 2 * np.pi, self.num_points
         )  # independent variable for the parametric equations
         self.basis = np.array(
             [
-                np.array(
                     list(
                         map(
                             start_rollerpin,
@@ -232,7 +237,6 @@ class RollerPins:
                             [i for j in range(self.tlist.shape[0])],
                         )
                     )
-                )
                 for i in range(1, self.npins + 1)
             ]
         )  # setting fundemental points for the cycloid with the sturucture: [points, normal vector, radius of curvature]
@@ -281,7 +285,7 @@ class OutputPins:
         self.basis = np.array(
                     [list(
                         map(
-                            start_outputpinhole,
+                            start_outputpin,
                             self.tlist,
                             [i for j in range(self.num_points)],
                         )
@@ -304,7 +308,6 @@ class OutputPins:
         )
 
     def plot(self):
-        print(self.basis)
         for i in range(self.npins):
             plt.plot(self.basis[i-1,:, 1], self.basis[i-1, :, 2], color=self.color)
         plt.plot(self.xaxis[:, 0], self.xaxis[:, 1], color=self.color)
