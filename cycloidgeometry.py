@@ -6,19 +6,20 @@ import json
 
 f = open('constants.json')
 
-e, rp, Rp, zc, rw, Rw, zw, re, rec, de, drwh, dRwh, drp, dRp = json.load(f)
+data = json.load(f)
 
 
-e = int(e)  # eccentricity distance
-rp = int(rp)  # roller pin radius
-Rp = int(Rp)  # roller pin distribution radius
-zc = int(zc)  # number of cycloidal teeth
+print(data)
+e = float(data['eccentricity'])  # eccentricity distance
+rp = float(data['roller_pin_r'])  # roller pin radius
+Rp = float(data['roller_pin_distribution_r'])  # roller pin distribution radius
+zc = int(data['num_cycloid_teeth'])  # number of cycloidal teeth
 zp = zc + 1  # number of roller pins
-rw = int(rw)  # output pin radius
-Rw = int(Rw)  # output pin distribution radius
+rw = float(data['output_pin_r'])  # output pin radius
+Rw = float(data['output_pin_distribution_r'])  # output pin distribution radius
 rwh = rw + e  # output pin hole radius
 Rwh = Rw # output pin hole distribution radius
-zw = int(zw)  # number of output pins
+zw = int(data['num_output_pins'])  # number of output pins
 # omegain = #input drive speed
 # omegaout = #output drive speed
 
@@ -30,17 +31,46 @@ zw = int(zw)  # number of output pins
 #     Iep = omegaout/omegain = zp/(zp - zc) = zp #theoretical transmission ratio
 
 
-re = int(re)  # radius of input shaft
-rec = int(rec)  # baring radius of eccentric shaft in contact with cycloidal gear
+re = float(data['input_shaft_r'])  # radius of input shaft
+rec = float(data['bearing_radius_of_eccentric_shaft'])  # baring radius of eccentric shaft in contact with cycloidal gear
 
 
-de = int(de)  # eccentric shaft deviation
+de = float(data['eccentric_shaft_deviation'])  # eccentric shaft deviation
 
-drwh = int(drwh)  # deviation in radius of pin-hole
-dRwh = int(dRwh)  # deviation in radius of distribution of pin-hole
+drwh = float(data['dev_r_pin_hole'])  # deviation in radius of pin-hole
+dRwh = float(data['dev_r_dist_pin_hole'])  # deviation in radius of distribution of pin-hole
 
-drp = int(drp)  # deviation in radius of roller pin
-dRp = int(dRp)  # deviation in radius of distribution of roller pin
+drp = float(data['dev_r_roller_pin'])  # deviation in radius of roller pin
+dRp = float(data['dev_r_dist_roller_pin'])  # deviation in radius of distribution of roller pin
+
+#contact theory variables:
+#Young's modulus
+Ec = #cycloid gear
+Ep = #pin gear
+Ew = #output pins
+Ewh = #pin-holes
+
+#Poisson's ratio
+vc = #cycloid gear
+vp = #pin gear
+vw = #output pins
+vwh = #pin-holes
+
+bw = #surface thickness for contact between output pins and output pin holes
+bp = #thickness of surface contact between cycloid gear and pin gear
+
+@dataclass
+class Material:
+    v: float  # Poisson's Ratio
+    e: float  # Young's Modulus
+    p: float  # Contact Curvature Radius
+
+# cycloid_mat = Material(Ec, vc, radius of cirvature to be determined) # 
+pin_gear_mat = Material(Ep, vp, rp)
+pin_hole_mat = Material(Ewh, vwh, (rwh + drwh))
+output_pin_mat = Material(Ew, vw, rw)
+
+
 
 
 # translation matricies
@@ -224,7 +254,7 @@ class RollerPins:
     color: str = "Green"
 
     def __init__(self):
-        self.npins: int = Rp
+        self.npins: int = zp
         self.tlist: np.ndarray = np.linspace(
             0, 2 * np.pi, self.num_points
         )  # independent variable for the parametric equations
@@ -313,13 +343,6 @@ class OutputPins:
         plt.plot(self.xaxis[:, 0], self.xaxis[:, 1], color=self.color)
         plt.plot(self.yaxis[:, 0], self.xaxis[:, 1], color=self.color)
         plt.plot(self.centers[:, 0], self.centers[:, 1], "o", color=self.color)
-
-
-@dataclass
-class Material:
-    v: float  # Poisson's Ratio
-    e: float  # Young's Modulus
-    p: float  # Contact Curvature Radius
 
 
 # Hertzian contact theory
